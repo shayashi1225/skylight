@@ -1,0 +1,51 @@
+
+
+:badges:
+:icons: font
+:iconsdir: icons/
+:source-highlighter: highlight.js
+:source-language: yaml
+
+
+= Workshop Lab Setup
+
+image::images/tower.002.png['Tower']
+
+== セットアップ
+
+[IMPORTANT]
+- 本日のワークショップ環境は、クラウド上で稼働しています。(either Amazon EC2, VMWare, or Azure)
+
+- 各受講者は、３つのインスタンスが割り当てられています。接続方法については、講師から提供されます。
+
+- このワークショップでは、Active Directory、DNS、GitLab環境が利用されています。
+
+== ワークショップ環境
+
+各受講者のlab環境は、下記がセットアップされています:
+
+* (1) コントロールノード (Ansibleを実行するためのLinuxホストで、Ansible Towerがインストールされています。)
+** Red Hat Enterprise 7
+* (1) Windows Workstation (環境との接続や、コードの編集などに使用します。)
+** Windows 2012/2016
+* (1) Windows Endpoint nodes (Ansible Playbookを実行する操作対象です)).
+** Windows 2012/2016
+* Ansible Engine 2.7
+* Ansible Tower 3.4
+
+== 環境の確認
+
+講師からの接続情報をもとに、皆さんのワークステーションインスタンスへRDPクライアントでログインしてください。本日使用する下記のアプリケーションがインストールされています：
+
+* Chrome
+* Visual Studio Code (Playbookの編集)
+* Git (ソースコード管理)
+
+[IMPORTANT]
+ワークステーションへログインできるか確認してください。もしできない場合、大声で叫び、手を振ってください！予備の演習環境を試します。
+
+== 最終結果
+
+ここまでで、皆さんは各自のワークステーションへログインできているべきです。もしできていないのであれば、おしらせください、対応します。
+
+

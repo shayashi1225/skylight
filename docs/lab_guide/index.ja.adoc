@@ -1,0 +1,60 @@
+include::header.ja.adoc[]
+
+
+=== はじめに
+
+lab環境と接続するためにRDPクライアントが必要です。
+
+== 概要
+
+本ワークショップは、Ansibleを使用したかどうかに関係なく、Ansibleに触れている人を対象としています。このワークショップは、プレゼンテーション、デモンストレーション、およびハンズオンラボで構成されています。
+
+== あなたの責任
+
+* 議論しましょう。話を聞いているだけだと退屈なので。
+* 参加しましょう。
+* Have a discussion. This will be boring if it's just us up here talking for over 4 hours.
+* Participate. We are going to cut you loose with Ansible here in just a little while. Have questions. Have opinions.
+
+ラップトップを持参いただくことが望ましいです。もしなければ、覗き見する相手を探しましょう。見えましたか？Ansibleを理解するだけでなく、新しい友達を作ることができます。
+
+
+== このドキュメント上の規則
+
+[TIP]
+このようなセクションが表示されるたびに、十分に注意を払ってください。
+
+
+*Step 1:* このコマンドを実行してください
+
+[source,bash]
+----
+ansible windows -m setup
+----
+
+*Step 2:* このファイルを編集してください
+
+[source,bash]
+----
+---
+- hosts: web
+  name: This is a play within a playbook
+  become: yes
+  vars:
+    httpd_packages:
+      - httpd
+      - mod_wsgi
+----
+
+[IMPORTANT]
+このドキュメントからコピー＆ペーストはしないでください。私たちは、このワークショップを通して、本当にAnsibleをあなたに学んで欲しいからです。そして、その経験の一部は、YAMLを実際にタイプし、その構文、間隔、配置を理解することです。
+
+
+== Document Copyright
+
+This document was created by and for Red Hat, Inc. It is being released under link:https://creativecommons.org/licenses/by/4.0/[Creative Commons License 4.0]. You are free to re-use it in whole or in part.
+
+You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+
+include::setup.ja.adoc[]
+

@@ -1,0 +1,192 @@
+include::header.ja.adoc[]
+
+= Exercise 1 - Ansible Towerの設定
+
+この演習では、Playbookを実行するためのAnsible Towerを設定します。
+
+== Ansible Towerを設定する
+
+Ansible Tower UIには、マルチテナンシー、通知、スケジューリングなどを可能にする多くの構成要素があります。
+本日のワークショップでは、下記の主要な要素にのみフォーカスします。
+
+* Credentials
+* Projects
+* Inventory
+* Job Template
+
+
+== Towerへログインする
+
+あなたのデスクトップ上に”Ansible Tower”という名前のショートカットがあります。クリックするとChrome上で各自のAnsible Towerが開かれます。
+
+Towerインスタンスは、すでにLDAPログインの事前設定がされており、各受講者の認証情報を使ってログインできます。
+
+Ansible Towerのライセンスは、すでに適用されており、ログイン後すぐにダッシュボードが確認できるはずです。
+
+
+== マシン認証情報を作成する
+
+認証情報は、Towerによって、マシンに対するジョブ起動、インベントリソースの同期、バージョン管理システムからのコンテンツインポートの際の認証で使用される。
+
+マシン、ネットワーク、クラウドプロバイダを含む多くのlink:http://docs.ansible.com/ansible-tower/latest/html/userguide/credentials.html#credential-types[認証情報のタイプ] があります。今回のワークショップでは、*マシン*、*ソースコントロール* 認証情報を使用します。
+
+
+=== Step 1:
+
+左のパネルからRESOURCESの下にあるCREDENTIALSを選択します。
+
+image:images/1-tower-credentials.png[Cred,200,400]
+
+=== Step 2:
+
+image:images/add.png[Add,35,25] をクリックして、新しい認証情報を追加します。
+
+=== Step 3:
+
+下記の内容でフォームを入力します:
+
+|===
+|NAME |Student Account
+|DESCRIPTION|
+|ORGANIZATION|Default
+|TYPE|Machine
+|USERNAME| <your USER ID -講師から提供
+
+(ie. student1@ansibleworkshop.com)>
+|PASSWORD| <your AD account password - 講師から提供>
+|===
+
+image::images/1-tower-add-machine-credential.png[title="Add Machine Credential",width=1000]
+
+
+=== Step 4:
+
+image:images/at_save.png[Save,35,25] をクリックします。
+
+== SCM認証情報を作成する
+
+最初に作成した認証情報は、Windowsマシンへアクセスするためのものでした。ソースコードリポジトリへアクセスするため、ここでもう一つのに認証情報を作成する必要があります。再度同様の作業を下記の内容で実施してください:
+
+|===
+|NAME |Git Credential
+|DESCRIPTION|SCM credential for playbook sync
+|ORGANIZATION|Default
+|TYPE|Source Control
+|USERNAME| <your USER ID - instructor provided (ie. student1@ansibleworkshop.com)>
+|PASSWORD| <your AD account password - instructor provided>
+|===
+
+image:images/at_save.png[Save,35,25] をクリックします。
+
+image::images/1-tower-add-scm-credential.png[title="Add SCM Credential",width=1000]
+
+== プロジェクトを作成する
+
+プロジェクトは、Towerで表現されるAnsible Playbookの論理的なコレクションです。あなたは、プレイブックとプレイブックディレクトリを、Towerサーバーのプロジェクトベースパスの下に手動で配置するか、もしくはGit、Subversion、Mercurialなど、Towerでサポートされるソースコード管理（SCM）システムにプレイブックを配置することで管理できます。
+
+=== Step 1:
+
+左パネルの *Projects* をクリックします。
+
+image:images/1-tower-project.png[Proj,200,400]
+
+
+=== Step 2:
+
+image:images/add.png[Add,35,25] をクリックして新規プロジェクトを追加します。
+
+=== Step 3:
+
+下記の内容でフォームを入力します: (*各自のstudent番号を使ってSCMのURLを補完してください*)
+
+|===
+|NAME |Ansible Workshop Project
+|DESCRIPTION|Workshop playbooks
+|ORGANIZATION|Default
+|SCM TYPE|Git
+|SCM URL|https://gitlab.ansibleworkshop.com/student#/student#.git
+|SCM BRANCH|
+|SCM CREDENTIAL|Git Credential
+|SCM UPDATE OPTIONS
+a|
+
+- [ ] Clean
+- [ ] Delete on Update
+- [*] Update Revision on Launch
+|===
+
+
+
+image::images/1-tower-create-project.png[title="Defining a Project",width=1000]
+
+
+
+=== Step 4:
+
+image:images/at_save.png[Save,35,25]を選択します。
+
+=== Step 5:
+
+スクロールダウンして、プロジェクト保存時にソースコントロールリポジトリとの同期が成功しているか確認します。ページ下部のリストビューで、プロジェクト名の横に緑色のアイコンが表示されます。
+
+image::images/1-tower-project-success.png[title="Succesfull Sync",width=1000]
+
+== インベントリ
+
+インベントリはジョブを起動させるホストのコレクションです。インベントリはグループの分割され、グループの中に実際のホストが含まれます。インベントリは手動でホスト名を登録するか、Ansible Towerがサポートするクラウドプロバイダから取り込むことができます。
+
+本環境で、静的なインベントリがすでに作成されています。このインベントリを見て、さまざまな機能の例を示します。
+
+=== Step 1:
+
+左パネルより *Inventories* をクリックします。事前に設定されているインベントがリストされるはずです。インベントリ名 *Ansible Workshop Inventory* か、image:images/at_edit.png[Edit,35,35]ボタンをクリックしてください。
+
+=== Step 2:
+
+インベントリ情報が見えているはずです。ここからホスト、グループ、固有の変数をインベントリへ追加できます。
+
+image::images/1-tower-edit-inventory.png[title="Edit Inventory",width=1000]
+
+ホストが表示されるので、*HOSTS* ボタンをクリックします。
+
+=== Step 3:
+
+Hostsビューの中でこのインベントリに関連するホストを参照できます。また、ホストが関連付けられているグループも表示されます。ホストは、複数のグループに関連づけることができます。これらのグループを使用して、後でプレイブックを実行する正確なホストに絞り込むことができます。
+
+image::images/1-tower-hosts-view.png[title="Hosts View",width=1000]
+
+
+=== Step 4:
+
+ホスト名もしくは、image:images/at_edit.png[Edit,35,35] ボタンをクリックすると、このホストに対する固有の変数を見ることができます。
+
+image::images/1-tower-host-edit.png[title="Host Edit",width=1000]
+
+
+今日はすでに、このホストがWindowsマシンであることをAnsibleへ伝えるためのいくつかの変数がセットアップされています。ここでこれらの変数をホスト変数として定義する必要はありません。グループ変数にすることも、テンプレートまたはプレイブックに直接置くこともできます。
+簡単にするためにここに配置します。
+
+デフォルトでは、AnsibleはSSHでホストへ接続を試みますので、Windowsの場合、異なる接続方法 link:https://docs.ansible.com/ansible/latest/user_guide/windows_winrm.html[WinRM] を利用するように指示する必要があります 
+
+*ansible_connection: winrm*
+
+AnsibleにWinRM SSLポート5986に接続するよう指示します（非SSLポートは5985で実行されますが、暗号化されません）。
+
+*ansible_port: 5986*
+
+AnsibleにWinRM証明書を無視するように指示します。これは、ラボに適切な証明書ストアのセットアップがないためです。
+
+*ansible_winrm_server_cert_validation: ignore*
+
+Windowsには、接続に利用できるさまざまな認証方法もあります。ここでは、*CredSSP* Transport Methodを使用してWindowsホストへの認証を行うようAnsibleに指示します
+
+*ansible_winrm_transport: credssp*
+
+
+これらの設定およびそのほかの設定について詳細は link:https://docs.ansible.com/ansible/latest/user_guide/windows.html[Windows Guides] で確認できます。
+認証設定は特に重要です。認証設定を確認し、最適な方法を決定する必要があります。
+
+
+=== ここまでの状態
+
+ここまでで、Ansible Towerの基本構成は完了です。演習2では、これらのホストに対していくつかのAd-Hocコマンドを実行します。
