@@ -1,0 +1,148 @@
+include::header.ja.adoc[]
+
+
+= Exercise 2 - Towerによるアドホックコマンド
+
+
+== Section 1: アドホックコマンド
+
+最初の演習は、どのようにAnsibleが動くかを掴んでもらうために、いくつかのアドホックコマンドを実行してみます。Ansibleのアドホックコマンドは、Playbookを書かずにリモートホスト上でタスクを走らせることができます。シンプルな一つか二つの作業をたくさんのリモーとホストへ行いたいときに、非常に便利です。
+
+
+
+=== Step 1:
+
+始めるためにインベントリを確認しましょう。左パネルから *Inventories* をクリックして、*Ansible Workshop Inventory* というインベントリをクリックします。詳細ページが確認できているはずですが、ホストを参照するため、*HOSTS* をクリックします。 
+
+各ホストの隣にチェックボックスがあります。アドホックコマンドを実行したいホストごと、このチェックボックスをチェックします。そうすると *RUN COMMANDS* ボタンが有効になるはずですので、これをクリックします。
+
+image::images/2-adhoc-run-command.png[title="Run Command",width=1000]
+
+*Execute Command* というウインドウがポップアップされるはずです。ここからシングルタスクを各ホストへ実行することができます。
+
+非常に基本的なこと（ホストへpingする）から始めましょう。`win_ping` モジュールは、Windowsホストの生死を確認します。これは従来の'ping'ではなく、ホストに対する接続と認証両方と実際に確認するものです。
+
+以下のフォームを入力してください
+
+|===
+|MODULE |win_ping
+|ARGUMENTS|
+|LIMIT|(ここは選択したホストで事前に入力されているでしょう)
+|MACHINE CREDENTIAL|Student Account
+|===
+
+image::images/2-adhoc-run-win_ping.png[title="Run Win_Ping",width=1000]
+
+一度 *LAUNCH* をクリックすると、ジョブログページへリダイレクトされます。AnsibleTower上での全ジョブおよびアクションは記録され保存されます。これらのログは自動でローテーションされ、自動でほかのロギングシステム（SplunkやELKスタック）へエクスポートすることもできます。
+
+ログの最初のパートでジョブの詳細が参照できます。ここには、誰がジョブを起動してどのホストに対して、いつ実行したかという情報が含まれています。
+
+image::images/2-adhoc-run-win_ping-success.png[title="Win_Ping Log Details",width=400]
+
+二つ目のパートは、実際のコマンドからの出力を参照できます。もし接続が成功していれば下記のような結果が出ているはずです。
+
+image::images/2-adhoc-run-win_ping-output.png[title="Win_Ping Log Details",width=1000]
+
+返される結果は、使用するモジュールによって異なります。これらはすべて、タスクに応じて異なるデータセットを処理および処理するためです。どんなモジュールを使っても、SUCCESS、FAILURE、CHANGED、またはSKIPPINGのいずれかの色分けされたステータスが常に表示されます。
+
+=== Step 2:
+
+ここで、 `win_shell` モジュールを使用してPowerShellコマンドを実行し、出力を表示する方法を見てみましょう。
+
+再度フォームを入力しましょう。今回は `win_shell` モジュールを使って `Get-Service` PowerShellコマンドを実行します。
+
+|===
+|MODULE |win_shell
+|ARGUMENTS|Get-Service
+|MACHINE CREDENTIAL|Student Account
+|===
+
+ジョブを起動して、結果を見てください。PowerShellコマンドが返した出力が直接参照できるはずです。
+このデータは変数に保存し、後でAnsibleプレイブック内で直接パースできます。
+
+もう一度、今度は `Get-Process` Powershellを実行しましょう。
+|===
+|MODULE |win_shell
+|ARGUMENTS|Get-Process
+|MACHINE CREDENTIAL|Student Account
+|===
+
+
+=== Step 3:
+
+Windowsノードの構成を見てみましょう。`setup` は、リモートホストへ様々なデータを問い合わせ、Ansible Factsとしてデータを返すモジュールです。
+このデータは、OSバージョン、ハードウェアコンフィギュレーション、その他情報を判断するために、役に立ちます。これは、タスクを実行するかどうかの決定、OSバージョンに基づいたパッケージの名前の決定など、あらゆる種類の理由でPlaybookで使用できます。
+
+`setup` モジュールは、あえて設定しない限り（デフォルトでは）、Playbookの開始時に毎回自動的に動きます。そうすれば、このデータは常にPlaybookで利用できます。
+
+出力を見るために `setup` を実行しましょう。*EXECUTE COMMAND* を下記の内容で入力してください。
+
+|===
+|MODULE |setup
+|ARGUMENTS|
+|MACHINE CREDENTIAL|Student Account
+|===
+
+このような結果になったはずです。
+
+image::images/2-adhoc-run-setup-output.png[title="Setup Log Details",width=1000]
+
+
+=== Step 4:
+
+これから、`win_feature` モジュールを使ってIISをインストールしましょう。*ARGUMENTS* パラメータは、もう少し複雑になります。
+
+|===
+|MODULE |win_feature
+|ARGUMENTS|name=Web-Server state=present
+|MACHINE CREDENTIAL|Student Account
+|===
+
+ログテキストがオレンジ色になっていることがわかります。これは、システムで変更が行われたことを示します。対して、以前に変更が行われなかったことは緑色で表されます。
+
+image::images/2-adhoc-run-win_feature-output.png[title="Win_Feature Log Details",width=1000]
+
+
+
+=== Step 5:
+
+IISが今インストールされました。`service` モジュールを使って、起動しているか確認しましょう。
+
+|===
+|MODULE |win_service
+|ARGUMENTS|name=W3Svc state=started
+|MACHINE CREDENTIAL|Student Account
+|===
+
+
+=== Step 6:
+
+最後に、クリーンアップしましょう。まず、IISサービスを停止します。
+
+|===
+|MODULE |win_service
+|ARGUMENTS|name=W3Svc state=stopped
+|MACHINE CREDENTIAL|Student Account
+|===
+
+=== Step 7:
+
+次にIIS機能を削除します。
+
+|===
+|MODULE |win_feature
+|ARGUMENTS|name=Web-Server state=absent
+|MACHINE CREDENTIAL|Student Account
+|===
+
+そして、サーバを再起動します。
+|===
+|MODULE |win_reboot
+|ARGUMENTS|
+|MACHINE CREDENTIAL|Student Account
+|===
+
+====
+[NOTE]
+win_rebootモジュールはマシンをリブートさせ、停止して起動するまで待ちます。これにより、もしあなたのPlaybookの途中にホストのリブートが必要だった場合、ホストへアクセスできずPlaybookの残りの処理が、失敗することはないでしょう。
+====

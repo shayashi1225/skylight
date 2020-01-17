@@ -1,0 +1,192 @@
+include::header.ja.adoc[]
+
+
+:figure-caption!:
+:become_url: http://docs.ansible.com/ansible/become.html#new-command-line-options
+:dir_url: http://docs.ansible.com/ansible/playbooks_best_practices.html
+:win_feature_url: http://docs.ansible.com/ansible/latest/win_feature_module.html
+:win_service_url: http://docs.ansible.com/ansible/latest/win_service_module.html
+:yaml_url: http://docs.ansible.com/ansible/YAMLSyntax.html
+
+
+= Exercise 3 - はじめてのPlaybook
+
+はじめての *playbook* を書いてみましょう。Playbookは、*plays* と *tasks* の繰り返し可能なセットへ自動化したいステップを記載する場所です。始めるために、Playbookを格納するディレクトリ構成をセットアップしましょう。このディレクトリ構成は、バージョン管理のため *source control management* (SCM) と同期します。SCMとして *git* を使用します。
+
+Playbookは複数のplayを持ち、playは一つまたは複数のtaskを持ちます。*play* の目的は、ホストのグループをマップすることです。*task* の目的は、それらホストに対するモジュールの実装です。
+
+最初のPlaybookとして、1 play、3 tasksを書きましょう。
+
+全てのPlaybookは、一つのgit *repository* に格納されるでしょう。複数ユーザが同じリポジトリを使い、gitはファイルの競合、バージョンを管理するでしょう。
+
+== 概要
+
+この作業から、エディターとしてVisual Studio Codeを使用します、また、ソースコード制御のためにGitLabを使用します。これにより、Linuixコマンドラインでの開発作業を削減することができます。ほかのエディターやソースコードソリューションも使えますが、ここでは一般的なワークフローを示します。
+
+
+== Section 1: ディレクトリ構成とPlaybookファイルを作成する
+
+Plkaybookのための望ましいディレクトリ構成として link:{dir_url}[best practice] があります。Ansibleスキルを開発する際には、これらのプラクティスを読んで理解することを強くお勧めします。そうはいっても、今日のプレイブックは非常に基本的なものであり、複雑なディレクトリ構造は必要ありません。
+
+代わりに、とてもシンプルなディレクトリ構成を作成し、いくつかのファイルを追加します。
+
+
+*Step 1:* Visual Studio Codeの起動
+
+このラボ環境では、すでにGitリポジトリがクローンされています。各自のドキュメントフォルダに配置されていて、フルパスはこのようになっています。（＃は各自受講者の番号で置き換えてください）
+'C:\Users\student#\Documents\student#'
+
+そこにアクセスするために、Visual Codeで *File > Open Folder* をクリックしてください。デフォルトではドキュメントフォルダーになっているので、studentフォルダーを選択し、*Select Folder* ボタンをクリックします。
+
+この時点で、Explorerサイドバーの「student＃」セクションには、READMEファイルのみが含まれているはずです。
+
+image::images/3-vscode-open-folder.png[title="Student Playbooks Repo",width=1000]
+
+*Step 2:* `iis_basic` フォルダと `install_iis.yml` ファイルを作成する
+
+'student#'セクションで右クリックして、'New Folder'を選択します。`iis_basic` という名前のフォルダを作成します。その後フォルダをクリックして選択します。作成した新しいフォルダを右クリックして、`install_iis.yml` というファイルを作成します。
+
+これで、playbookの作成に使用できるエディターが右側のペインで開かれます。
+
+
+image::images/3-vscode-create-folders.png[title="Empty install_iis.yml",width=1000]
+
+== Section 2: Playを定義する
+
+今 `install_iis.yml` を編集しているので、playを定義し、各行の役割を理解することから始めましょう。
+
+
+[source,bash]
+----
+---
+- name: install the iis web service
+  hosts: all
+
+----
+
+
+- `---` YAMLの先頭を定義
+- `name: install the iis web service` Playの説明
+- `hosts: all` このPlayを走らせる、インベントリの中のグループを定義
+
+
+== Section 3: PlayへTaskを追加する
+
+Playを定義したので、いくつかのtaskを追加しましょう。`task` の *t* の位置を `hosts` の *h* の位置に揃えます。
+実際これは重要です。Playbookのすべての記述がここに示されている方法で整列していることを確認する必要があります。また、インデントにはスペースを使用する必要があります。タブはYAMLの構文として有効ではありません。
+もし完成したPlaybookを参考にしたい場合は、この演習の最後にあります。
+
+
+
+[source,bash]
+----
+  tasks:
+   - name: install iis
+     win_feature:
+       name: Web-Server
+       state: present
+
+   - name: start iis service
+     win_service:
+       name: W3Svc
+       state: started
+
+   - name: Create website index.html
+     win_copy:
+       content: "{{ iis_test_message }}"
+       dest: C:\Inetpub\wwwroot\index.html
+----
+
+
+- `tasks:` これは、1つ以上のタスクが定義されようとしていることを示します
+- `- name:` 各タスクには、プレイブックの実行時に標準出力に出力される名前が必要です。したがって、タスクには、短くて、sweetな名前を付けてください。
+
+
+[source,bash]
+----
+win_feature:
+  name: Web-Server
+  state: present
+----
+
+
+- この３行は、IIS Webサーバをインストールするため、*win_feature* モジュールを読んでいます。*win_feature* モジュールの全オプションは link:{win_feature_url}[Click here] を参照してください。
+
+
+
+[source,bash]
+----
+win_service:
+  name: W3Svc
+  state: started
+----
+
+
+- 次の数行は、IISサービスを起動するために *win_service* モジュールを使っています。`win_service` モジュールは、リモートホスト上のサービスを制御するのに望ましい方法です。*win_service* についての詳細は、link:{win_service_url}[Click here] を確認してください。
+
+[source,bash]
+----
+win_copy:
+  content: "{{ iis_test_message }}"
+  dest: C:\Inetpub\wwwroot\index.html
+----
+
+
+- このタスクで、特定のコンテンツを中に含んだファイルを作成するために win_copyモジュールを使います。ここでは、変数を使用してコンテンツを取得するため、やや複雑になっています。変数については、後のレッスンで説明するため、まだ説明しません。
+
+
+== Section 4: Playbookを保存する
+
+Playbookが完成したので、保存しないのは残念です。メニューから `File > Save` をクリックします。
+
+これで、`install_iis.yml` というPlaybookが完成しました。
+
+しかし、待って！！！まだこの変更を *local* コピーから *git* へコミットしていません。以下に示すように、Source Codeアイコンをクリックします（ページの一番左の中央に、青い丸に数字の1が含まれています）
+
+image::images/3-vscode-click-commit.png[title="Git Commit",width=1000]
+
+サイドバーの上部のテキストボックスに「Adding install_iis.yml」などのコミットメッセージを入力します。上のチェックマークをクリックしてコミットします。このメッセージは、バージョンを比較するときに他の人（自分を含む）が何を変更しているかをよりよく理解できるように、行った変更を説明することを目的としています。
+
+image::images/3-vscode-commit.png[title="Git Commit install_iis.yml",width=1000]
+
+コミットした変更をリポジトリへプッシュする必要があります。
+
+左下の青いバーで、円形の矢印を含むセクションをクリックして、変更をプッシュします。
+
+image::images/3-vscode-push.png[title="Git Push Origin"]
+
+プッシュするのに30秒かかる場合があります。最初のプッシュのあと、定期的にgit fetchを実行するかどうかを尋ねるポップアップメッセージが表示される場合があります。そのgitリポジトリは一人しか作業していないので、*Yes* or *No* をクリックします。
+
+image::images/3-vscode-push-initial-pop-up.png[title="Git Push Origin"]
+
+もしgit上で確認したい場合は、Gitlabに接続できます。`Chrome` を起動して、`https://gitlab.ansibleworkshop.com` へ接続してください。そして、`LDAP Login` タブをクリックして、あなたのADユーザ(student#@ansibleworkshop.com)とパスワードでログインして、リポジトリを確認してください。
+
+自動化の準備ができました！
+
+
+[NOTE]
+
+Ansible（実際にはYAML）は、特にインデント、スペース付近のフォーマットについて、少し特殊なことがあります。オフィスに戻ったら、link:{yaml_url}[YAML Syntax] を読んでください、頭痛の種を減らすことができます。それまでの間、完成したプレイブックは次のようになります。スペースとアライメントに注意してみてください。
+
+[source,bash]
+----
+---
+- name: install the iis web service
+  hosts: all
+
+  tasks:
+    - name: install iis
+      win_feature:
+        name: Web-Server
+        state: present
+
+    - name: start iis service
+      win_service:
+        name: W3Svc
+        state: started
+
+    - name: Create website index.html
+      win_copy:
+        content: "{{ iis_test_message }}"
+        dest: C:\Inetpub\wwwroot\index.html
+----
